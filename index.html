@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#111827">
+<link rel="manifest" href="manifest.json">
+<title>My Planner</title>
+<style>
+:root{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color-scheme:light dark;--bg:light-dark(#f5f7fb,#0b1020);--card:light-dark(#fff,#151b2d);--text:light-dark(#111827,#f3f4f6);--muted:light-dark(#6b7280,#aab2c5);--line:light-dark(#e5e7eb,#2b344a);--accent:light-dark(#2563eb,#60a5fa)}
+*{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--text)} button,input,textarea{font:inherit}
+.app{min-height:100vh;background:var(--bg)} header{padding:22px 18px 12px;position:sticky;top:0;background:color-mix(in srgb,var(--bg) 94%,transparent);backdrop-filter:blur(12px);z-index:5}
+h1{margin:0;font-size:25px}.sub{color:var(--muted);font-size:13px;margin-top:4px}
+main{max-width:760px;margin:auto;padding:8px 16px 100px}.toolbar{display:flex;gap:8px;margin:12px 0}.search{flex:1;border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:13px;padding:12px}
+.btn{border:0;border-radius:13px;padding:11px 14px;background:var(--accent);color:white;font-weight:700}.ghost{background:var(--card);color:var(--text);border:1px solid var(--line)}
+.tabs{display:flex;gap:7px;overflow:auto;margin-bottom:14px}.tab{white-space:nowrap}.tab.active{background:var(--text);color:var(--bg)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:17px;padding:14px;margin:10px 0;box-shadow:0 3px 12px #00000008}
+.task{display:flex;gap:12px;align-items:flex-start}.check{width:23px;height:23px;margin-top:2px;accent-color:var(--accent)}
+.task h3{margin:0 0 5px;font-size:16px}.done h3{text-decoration:line-through;opacity:.55}.meta{font-size:12px;color:var(--muted)}.notes{font-size:13px;margin-top:7px;white-space:pre-wrap}
+.actions{margin-left:auto;display:flex;gap:5px}.icon{border:0;background:transparent;color:var(--muted);padding:5px}.empty{text-align:center;padding:50px 15px;color:var(--muted)}
+.fab{position:fixed;right:18px;bottom:20px;border:0;border-radius:18px;padding:15px 20px;background:var(--accent);color:#fff;font-weight:800;box-shadow:0 8px 24px #0003}
+dialog{border:1px solid var(--line);border-radius:20px;background:var(--card);color:var(--text);width:min(94vw,520px);padding:0}dialog::backdrop{background:#0008}.form{padding:20px}.form h2{margin-top:0}.field{margin:12px 0}.field label{display:block;font-size:13px;color:var(--muted);margin-bottom:5px}.field input,.field textarea{width:100%;border:1px solid var(--line);background:var(--bg);color:var(--text);border-radius:12px;padding:11px}.field textarea{min-height:90px;resize:vertical}.form-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}
+.install{display:none;margin:10px 0;width:100%}
+</style>
+</head>
+<body>
+<div class="app">
+<header><h1>My Planner</h1><div class="sub" id="today"></div></header>
+<main>
+<button id="install" class="btn install">Install My Planner</button>
+<div class="toolbar"><input id="search" class="search" placeholder="Search tasks..."><button class="btn" id="clearDone">Clear done</button></div>
+<div class="tabs">
+<button class="btn ghost tab active" data-filter="all">All</button>
+<button class="btn ghost tab" data-filter="today">Today</button>
+<button class="btn ghost tab" data-filter="upcoming">Upcoming</button>
+<button class="btn ghost tab" data-filter="done">Completed</button>
+</div>
+<section id="list"></section>
+</main>
+<button class="fab" id="add">＋ Add task</button>
+</div>
+
+<dialog id="dlg"><form class="form" method="dialog" id="taskForm">
+<h2 id="formTitle">Add task</h2>
+<input type="hidden" id="taskId">
+<div class="field"><label>Task</label><input id="title" required placeholder="e.g. Open shop"></div>
+<div class="field"><label>Date</label><input id="date" type="date" required></div>
+<div class="field"><label>Time</label><input id="time" type="time"></div>
+<div class="field"><label>Notes</label><textarea id="notes" placeholder="Optional notes"></textarea></div>
+<div class="form-actions"><button class="btn ghost" value="cancel">Cancel</button><button class="btn" id="save" value="default">Save</button></div>
+</form></dialog>
+
+<script>
+const $=id=>document.getElementById(id);
+let tasks=JSON.parse(localStorage.getItem('myPlannerTasks')||'[]');
+let filter='all', deferredPrompt=null;
+const pad=n=>String(n).padStart(2,'0');
+const iso=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const today=iso(new Date());
+$('today').textContent=new Date().toLocaleDateString(undefined,{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+$('date').value=today;
+
+function save(){localStorage.setItem('myPlannerTasks',JSON.stringify(tasks));render();}
+function render(){
+ let q=$('search').value.toLowerCase().trim(), now=today;
+ let arr=tasks.filter(t=>{
+   if(filter==='today'&&t.date!==now)return false;
+   if(filter==='upcoming'&&(t.date<now||t.done))return false;
+   if(filter==='done'&&!t.done)return false;
+   return !q || (t.title+' '+t.notes).toLowerCase().includes(q);
+ }).sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));
+ $('list').innerHTML='';
+ if(!arr.length){$('list').innerHTML='<div class="empty">No tasks here yet.<br>Tap ＋ Add task to create one.</div>';return}
+ arr.forEach(t=>{
+   const c=document.createElement('article');c.className='card '+(t.done?'done':'');
+   c.innerHTML=`<div class="task">
+   <input class="check" type="checkbox" ${t.done?'checked':''} aria-label="Complete">
+   <div style="flex:1"><h3></h3><div class="meta"></div><div class="notes"></div></div>
+   <div class="actions"><button class="icon edit">✎</button><button class="icon del">🗑</button></div></div>`;
+   c.querySelector('h3').textContent=t.title;
+   c.querySelector('.meta').textContent=(t.date?new Date(t.date+'T00:00:00').toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'}):'')+(t.time?' • '+t.time:'');
+   c.querySelector('.notes').textContent=t.notes||'';
+   c.querySelector('.check').onchange=e=>{t.done=e.target.checked;save()};
+   c.querySelector('.edit').onclick=()=>openForm(t);
+   c.querySelector('.del').onclick=()=>{if(confirm('Delete this task?')){tasks=tasks.filter(x=>x.id!==t.id);save()}};
+   $('list').appendChild(c);
+ });
+}
+function openForm(t=null){
+ $('formTitle').textContent=t?'Edit task':'Add task';
+ $('taskId').value=t?.id||'';
+ $('title').value=t?.title||'';
+ $('date').value=t?.date||today;
+ $('time').value=t?.time||'';
+ $('notes').value=t?.notes||'';
+ $('dlg').showModal();setTimeout(()=>$('title').focus(),50);
+}
+$('taskForm').addEventListener('submit',e=>{
+ e.preventDefault();
+ const id=$('taskId').value;
+ const obj={id:id||crypto.randomUUID(),title:$('title').value.trim(),date:$('date').value,time:$('time').value,notes:$('notes').value.trim(),done:id?(tasks.find(t=>t.id===id)?.done||false):false};
+ if(!obj.title)return;
+ if(id)tasks=tasks.map(t=>t.id===id?obj:t);else tasks.push(obj);
+ $('dlg').close();save();
+});
+$('add').onclick=()=>openForm();
+$('search').oninput=render;
+$('clearDone').onclick=()=>{tasks=tasks.filter(t=>!t.done);save()};
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');filter=b.dataset.filter;render()});
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;$('install').style.display='block'});
+$('install').onclick=async()=>{if(deferredPrompt){deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;$('install').style.display='none'}};
+if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+render();
+</script>
+</body></html>
