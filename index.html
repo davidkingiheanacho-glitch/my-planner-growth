@@ -130,7 +130,18 @@ document.querySelectorAll('#repeatDays input').forEach(cb=>{
 $('taskForm').addEventListener('submit',e=>{
  e.preventDefault();
  const id=$('taskId').value;
- const obj={id:id||crypto.randomUUID(),title:$('title').value.trim(),date:$('date').value,time:$('time').value,notes:$('notes').value.trim(),done:id?(tasks.find(t=>t.id===id)?.done||false):false};
+ const repeat=$('repeat').value;
+const repeatDays=[...document.querySelectorAll('#repeatDays input:checked')].map(cb=>Number(cb.value));
+const obj={
+  id:id||crypto.randomUUID(),
+  title:$('title').value.trim(),
+  date:$('date').value,
+  time:$('time').value,
+  notes:$('notes').value.trim(),
+  repeat,
+  repeatDays,
+  done:id?(tasks.find(t=>t.id===id)?.done||false):false
+};
  if(!obj.title)return;
  if(id)tasks=tasks.map(t=>t.id===id?obj:t);else tasks.push(obj);
  $('dlg').close();save();
