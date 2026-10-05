@@ -44,7 +44,34 @@ dialog{border:1px solid var(--line);border-radius:20px;background:var(--card);co
 <h2 id="formTitle">Add task</h2>
 <input type="hidden" id="taskId">
 <div class="field"><label>Task</label><input id="title" required placeholder="e.g. Open shop"></div>
-<div class="field"><label>Date</label><input id="date" type="date" required></div>
+<div class="field">
+<label>Date</label>
+<input id="date" type="date" required>
+</div>
+
+<div class="field">
+<label>Repeat</label>
+<select id="repeat">
+<option value="none">Never</option>
+<option value="daily">Every day</option>
+<option value="weekly">Every week</option>
+<option value="days">Selected days</option>
+<option value="monthly">Every month</option>
+</select>
+</div>
+
+<div class="field" id="repeatDays" style="display:none">
+<label>Select days</label>
+<div style="display:flex;flex-wrap:wrap;gap:8px">
+<label><input type="checkbox" value="1"> Mon</label>
+<label><input type="checkbox" value="2"> Tue</label>
+<label><input type="checkbox" value="3"> Wed</label>
+<label><input type="checkbox" value="4"> Thu</label>
+<label><input type="checkbox" value="5"> Fri</label>
+<label><input type="checkbox" value="6"> Sat</label>
+<label><input type="checkbox" value="0"> Sun</label>
+</div>
+</div>
 <div class="field"><label>Time</label><input id="time" type="time"></div>
 <div class="field"><label>Notes</label><textarea id="notes" placeholder="Optional notes"></textarea></div>
 <div class="form-actions"><button class="btn ghost" value="cancel">Cancel</button><button class="btn" id="save" value="default">Save</button></div>
