@@ -147,6 +147,9 @@ const obj={
  $('dlg').close();save();
 });
 $('add').onclick=()=>openForm();
+$('repeat').addEventListener('change',()=>{
+  $('repeatDays').style.display=$('repeat').value==='days'?'block':'none';
+});
 $('search').oninput=render;
 $('clearDone').onclick=()=>{tasks=tasks.filter(t=>!t.done);save()};
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');filter=b.dataset.filter;render()});
