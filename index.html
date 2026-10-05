@@ -120,6 +120,11 @@ function openForm(t=null){
  $('date').value=t?.date||today;
  $('time').value=t?.time||'';
  $('notes').value=t?.notes||'';
+ $('repeat').value=t?.repeat||'none';
+$('repeatDays').style.display=t?.repeat==='days'?'block':'none';
+document.querySelectorAll('#repeatDays input').forEach(cb=>{
+  cb.checked=(t?.repeatDays||[]).includes(Number(cb.value));
+});
  $('dlg').showModal();setTimeout(()=>$('title').focus(),50);
 }
 $('taskForm').addEventListener('submit',e=>{
