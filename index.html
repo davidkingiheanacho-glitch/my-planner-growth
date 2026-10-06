@@ -129,7 +129,21 @@ const occursOn=(t,date)=>{
    <div style="flex:1"><h3></h3><div class="meta"></div><div class="notes"></div></div>
    <div class="actions"><button class="icon edit">✎</button><button class="icon del">🗑</button></div></div>`;
    c.querySelector('h3').textContent=t.title;
-   c.querySelector('.meta').textContent=(t.date?new Date(t.date+'T00:00:00').toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'}):'')+(t.time?' • '+t.time:'');
+   let repeatText='';
+if(t.repeat==='daily') repeatText='Every day';
+else if(t.repeat==='weekly') repeatText='Every week';
+else if(t.repeat==='monthly') repeatText='Every month';
+else if(t.repeat==='days'){
+  const names=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  repeatText='Every '+(t.repeatDays||[]).map(d=>names[d]).join(', ');
+}
+
+c.querySelector('.meta').textContent=
+  (t.date?new Date(t.date+'T00:00:00').toLocaleDateString(undefined,{
+    weekday:'short',month:'short',day:'numeric'
+  }):'')+
+  (repeatText?' • '+repeatText:'')+
+  (t.time?' • '+t.time:'');
    c.querySelector('.notes').textContent=t.notes||'';
    c.querySelector('.check').onchange=e=>{t.done=e.target.checked;save()};
    c.querySelector('.edit').onclick=()=>openForm(t);
