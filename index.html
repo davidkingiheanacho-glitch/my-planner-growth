@@ -114,7 +114,7 @@ const occursOn=(t,date)=>{
 
   return false;
 };
- let arr=tasks.filter(t=>{
+  let arr=tasks.filter(t=>{
    if(filter==='today'&&t.date!==now)return false;
    if(filter==='upcoming'&&(t.date<now||t.done))return false;
    if(filter==='done'&&!t.done)return false;
