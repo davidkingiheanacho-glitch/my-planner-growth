@@ -160,6 +160,20 @@ c.querySelector('.meta').textContent=
 
   save();
 };
+  const occurrenceDate=t.repeat && t.repeat!=='none' ? now : t.date;
+
+  if(!t.completedDates)t.completedDates=[];
+
+  if(e.target.checked){
+    if(!t.completedDates.includes(occurrenceDate)){
+      t.completedDates.push(occurrenceDate);
+    }
+  }else{
+    t.completedDates=t.completedDates.filter(d=>d!==occurrenceDate);
+  }
+
+  save();
+};
    c.querySelector('.edit').onclick=()=>openForm(t);
    c.querySelector('.del').onclick=()=>{if(confirm('Delete this task?')){tasks=tasks.filter(x=>x.id!==t.id);save()}};
    $('list').appendChild(c);
