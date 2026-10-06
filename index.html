@@ -90,6 +90,30 @@ $('date').value=today;
 function save(){localStorage.setItem('myPlannerTasks',JSON.stringify(tasks));render();}
 function render(){
  let q=$('search').value.toLowerCase().trim(), now=today;
+const occursOn=(t,date)=>{
+  if(!t.repeat||t.repeat==='none') return t.date===date;
+
+  const start=new Date(t.date+'T00:00:00');
+  const current=new Date(date+'T00:00:00');
+
+  if(current<start) return false;
+
+  if(t.repeat==='daily') return true;
+
+  if(t.repeat==='weekly'){
+    return current.getDay()===start.getDay();
+  }
+
+  if(t.repeat==='monthly'){
+    return current.getDate()===start.getDate();
+  }
+
+  if(t.repeat==='days'){
+    return (t.repeatDays||[]).includes(current.getDay());
+  }
+
+  return false;
+};
  let arr=tasks.filter(t=>{
    if(filter==='today'&&t.date!==now)return false;
    if(filter==='upcoming'&&(t.date<now||t.done))return false;
