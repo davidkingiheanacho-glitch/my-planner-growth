@@ -125,7 +125,11 @@ const occursOn=(t,date)=>{
  arr.forEach(t=>{
    const c=document.createElement('article');c.className='card '+(t.done?'done':'');
    c.innerHTML=`<div class="task">
-   <input class="check" type="checkbox" ${t.done?'checked':''} aria-label="Complete">
+   <input class="check" type="checkbox" ${
+  t.repeat && t.repeat!=='none'
+    ? (t.completedDates||[]).includes(now)
+    : t.done
+} aria-label="Complete">
    <div style="flex:1"><h3></h3><div class="meta"></div><div class="notes"></div></div>
    <div class="actions"><button class="icon edit">✎</button><button class="icon del">🗑</button></div></div>`;
    c.querySelector('h3').textContent=t.title;
