@@ -117,7 +117,12 @@ const occursOn=(t,date)=>{
   let arr=tasks.filter(t=>{
    if(filter==='today'&&t.date!==now)return false;
    if(filter==='upcoming'&&(t.date<now||t.done))return false;
-   if(filter==='done'&&!t.done)return false;
+   if(filter==='done'){
+  const completed=t.repeat && t.repeat!=='none'
+    ? (t.completedDates||[]).includes(now)
+    : t.done;
+  if(!completed)return false;
+}
    return !q || (t.title+' '+t.notes).toLowerCase().includes(q);
  }).sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));
  $('list').innerHTML='';
